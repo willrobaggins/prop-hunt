@@ -215,8 +215,12 @@ public class PropHuntPlugin extends Plugin
 	@Subscribe
 	public void onClientTick(final ClientTick event) {
 		if(config.hideMode() && localDisguise != null) {
+			// Update the location of the local disguise if hideMode is on
 			LocalPoint playerPoint = client.getLocalPlayer().getLocalLocation();
 			localDisguise.setLocation(playerPoint, client.getPlane());
+		} else {
+			// When hideMode is off, ensure the disguise is removed
+			removeLocalTransmog();
 		}
 
 		client.getPlayers().forEach(this::updateDisguiseLocation);
