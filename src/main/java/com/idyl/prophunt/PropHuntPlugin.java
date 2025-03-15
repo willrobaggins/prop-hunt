@@ -112,7 +112,7 @@ public class PropHuntPlugin extends Plugin
 	{
 		playersData = new HashMap<>();
 		hooks.registerRenderableDrawListener(drawListener);
-		clientThread.invokeLater(() -> transmogPlayer(client.getLocalPlayer()));
+		//clientThread.invokeLater(() -> transmogPlayer(client.getLocalPlayer()));
 		setPlayersFromString(config.players());
 		getPlayerConfigs();
 		storeOriginalDots();
