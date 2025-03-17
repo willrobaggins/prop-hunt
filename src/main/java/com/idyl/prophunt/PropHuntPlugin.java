@@ -7,6 +7,9 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import javax.inject.Inject;
+import net.runelite.api.Perspective;
+import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.coords.LocalPoint;
 
 import joptsimple.util.RegexMatcher;
 import lombok.Getter;
@@ -112,7 +115,7 @@ public class PropHuntPlugin extends Plugin
 	{
 		playersData = new HashMap<>();
 		hooks.registerRenderableDrawListener(drawListener);
-		//clientThread.invokeLater(() -> transmogPlayer(client.getLocalPlayer()));
+		clientThread.invokeLater(() -> transmogPlayer(client.getLocalPlayer()));
 		setPlayersFromString(config.players());
 		getPlayerConfigs();
 		storeOriginalDots();
@@ -169,8 +172,8 @@ public class PropHuntPlugin extends Plugin
 		}
 
 		if(event.getKey().equals("players")) {
+			removeTransmogs();
 			setPlayersFromString(config.players());
-			clientThread.invokeLater(() -> removeTransmogs());
 			getPlayerConfigs();
 		}
 
@@ -214,16 +217,28 @@ public class PropHuntPlugin extends Plugin
 
 	@Subscribe
 	public void onClientTick(final ClientTick event) {
-		if(config.hideMode() && localDisguise != null) {
-			// Update the location of the local disguise if hideMode is on
+		// Update the disguise for the local player if hideMode is enabled
+		if (config.hideMode() && localDisguise != null) {
 			LocalPoint playerPoint = client.getLocalPlayer().getLocalLocation();
 			localDisguise.setLocation(playerPoint, client.getPlane());
 		} else {
-			// When hideMode is off, ensure the disguise is removed
 			removeLocalTransmog();
 		}
 
-		client.getPlayers().forEach(this::updateDisguiseLocation);
+		// Update disguises for all other players
+		transmogOtherPlayers();
+		client.getPlayers().forEach(this::updatePlayerDisguiseLocation);
+	}
+
+	private void updatePlayerDisguiseLocation(Player player) {
+		if (player == null || player == client.getLocalPlayer()) {
+			return;  // Skip the local player
+		}
+
+		RuneLiteObject disguise = playerDisguises.get(player.getName());
+		if (disguise != null) {
+			disguise.setLocation(player.getLocalLocation(), player.getWorldLocation().getPlane());  // Update the location
+		}
 	}
 
 	@Subscribe
@@ -336,64 +351,44 @@ public class PropHuntPlugin extends Plugin
 		transmogPlayer(player, getModelID(), config.orientation(), true);
 	}
 
-	private void transmogPlayer(Player player, int modelId, int orientation, boolean local) {
-		int modelID;
-		if(client.getLocalPlayer() == null) return;
+	private void transmogPlayer(Player player, int modelId, int orientation, boolean isLocal) {
+		// Use the model ID for the disguise
+		int modelID = isLocal ? modelId : playersData.get(player.getName()).modelID;  // Local model ID for the local player, otherwise use the player's modelID from playersData
 
-
-		else
-		{
-			modelID = modelId;
+		// Remove any existing disguise to avoid layering
+		if (isLocal) {
+			removeLocalTransmog();
+		} else {
+			removePlayerTransmog(player);  // Ensure this is working properly
 		}
 
-		// Remove the original model if it exists before applying the disguise
-		removeLocalTransmog();
-
+		// Create a new disguise (RuneLiteObject)
 		RuneLiteObject disguise = client.createRuneLiteObject();
 
+		// Get the player's world location and convert it to local coordinates
 		LocalPoint loc = LocalPoint.fromWorld(client, player.getWorldLocation());
-		if (loc == null)
-		{
-			return;
+		if (loc == null) {
+			return; // Return early if the location is invalid
 		}
 
+		// Load the model based on modelID
 		Model model = client.loadModel(modelID);
-
-		if (model == null)
-		{
-			final Instant loadTimeOutInstant = Instant.now().plus(Duration.ofSeconds(5));
-
-			clientThread.invoke(() ->
-			{
-				if (Instant.now().isAfter(loadTimeOutInstant))
-				{
-					return true;
-				}
-
-				Model reloadedModel = client.loadModel(modelID);
-
-				if (reloadedModel == null)
-				{
-					return false;
-				}
-
-				localDisguise.setModel(reloadedModel);
-
-				return true;
-			});
-		}
-		else {
-			disguise.setModel(model);
+		if (model == null) {
+			log.warn("Failed to load model with ID: {}", modelID);
+			return; // If the model fails to load, exit early
 		}
 
+		// Set the model and location for the disguise
+		disguise.setModel(model);
 		disguise.setLocation(player.getLocalLocation(), player.getWorldLocation().getPlane());
-		disguise.setActive(true);
-		disguise.setOrientation(orientation);
-		if(local) {
-			localDisguise = disguise;
-		}
-		else {
-			playerDisguises.put(player.getName(), disguise);
+		disguise.setActive(true);  // Activate the disguise
+		disguise.setOrientation(orientation);  // Set the disguise orientation
+
+		// Store the disguise: local player or other players
+		if (isLocal) {
+			localDisguise = disguise;  // Store the disguise for the local player
+		} else {
+			playerDisguises.put(player.getName(), disguise);  // Store the disguise for other players
 		}
 	}
 
@@ -406,7 +401,6 @@ public class PropHuntPlugin extends Plugin
 			PropHuntPlayerData data = playersData.get(player.getName());
 
 			if(data == null || !data.hiding) return;
-
 			transmogPlayer(player, data.modelID, data.orientation, false);
 		});
 	}
@@ -430,6 +424,14 @@ public class PropHuntPlugin extends Plugin
 	private void removeAllTransmogs() {
 		removeTransmogs();
 		removeLocalTransmog();
+	}
+
+	private void removePlayerTransmog(Player player) {
+		RuneLiteObject disguise = playerDisguises.get(player.getName());
+		if (disguise != null) {
+			disguise.setActive(false);  // Deactivate the disguise
+			playerDisguises.remove(player.getName());  // Remove the disguise from the map
+		}
 	}
 
 	private void updateDisguiseLocation(Player p) {
@@ -525,9 +527,19 @@ public class PropHuntPlugin extends Plugin
 		return config.modelID();
 	}
 
-	public void setRandomModelID(){
+	private static final int RANDOM_MODEL_UPDATE_INTERVAL = 5000; // 5 seconds
+	private long lastRandomModelUpdate = 0;
+
+	public void setRandomModelID() {
+		long currentTime = System.currentTimeMillis();
+		if (currentTime - lastRandomModelUpdate < RANDOM_MODEL_UPDATE_INTERVAL) {
+			return; // Skip updating if it's too soon
+		}
+
 		configManager.setConfiguration(CONFIG_KEY, "modelID", ThreadLocalRandom.current().nextInt(config.randMinID(), config.randMaxID() + 1));
+		lastRandomModelUpdate = currentTime; // Update the timestamp
 	}
+
 
 	private void updateDropdown() {
 		String[] modelList = config.models().split(",");
@@ -573,4 +585,5 @@ public class PropHuntPlugin extends Plugin
 	{
 		return configManager.getConfig(PropHuntConfig.class);
 	}
+
 }
