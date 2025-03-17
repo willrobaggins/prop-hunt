@@ -1,4 +1,4 @@
-
+﻿
 
 # Prop Hunt
 
@@ -18,44 +18,36 @@ There are two menus to utilize, one for the Seeker and one for the Hider.
 
 Gather your friends and type their usernames  (comma separated)  in the Players field in the plugin settings. This will allow you to see the disguises of each respective user.
 
-![Config Menu](https://imgur.com/Eui2Kit.png)
+![Config Menu](https://imgur.com/a/2UjN7vv)
 
 Seekers are encouraged to turn on each setting in this menu.
 
 *Hide Minimap Dots:* Toggle whether minimap dots are hidden. **(Recommended for seekers)**
+
 *Deprioritize Menu Clicks:* Forces 'Walk Here' to the top of every menu to better hide props. **(Recommended for seekers)**
+
 *Limit Right Clicks:* Limit the number of right clicks a seeker can do. (Guesses they may take)
+
 *Maximum Right Clicks:* The number of guesses a seeker can make.
-
-**ADVANCED:**
-*This section is meant for those willing and able to stand up their own API server to handle the GET and POST requests of the plugin.*
-
-You may toggle the *User alternate API server?* option to activate the URL you have entered in the preceding field. This option is meant for advanced users who have set up an API server to handle the requests of the plugin. Leave this alone if you are lost.
 
 ## Hider Menu (Side Panel)
 
-![Navigating to Hider Menu](https://imgur.com/fPx6RH5.png)
+![Navigating to Hider Menu](https://imgur.com/yLeUG8v)
 
 You will find the Prop Hunt panel on the side of your RuneLite client, this is the main menu used by hiders. 
+*NOTE:* Hiders are encouraged to also add the player names in the config menu, but otherwise they only need to utilize this menu.
 
-*NOTE:* Hiders are encouraged to also add the player names in the config menu, but otherwise they only need to utilize this menu.  
-<br/>
-![Hider Menu](https://imgur.com/Rrgi7Cl.png)
+![Hider Menu](https://imgur.com/qefQ6rf)
 
 **MODEL PANEL**
-
 In this panel, you have two options:
-
--*Enter Model ID:* You may explicitly input your desired model ID, this will automatically apply if Hide Mode is enabled.
-
--*Randomizer:* Specifying a range of model IDS, utilizing the Min ID and Max ID fields, you may randomize your model ID by clicking the "Randomize Model" button. This will automatically apply if Hide Mode is enabled.
+			 - *Enter Model ID:* You may explicitly input your desired model ID, this will automatically apply if Hide Mode is 		enabled.
+			 - *Randomizer:* Specifying a range of model IDS, utilizing the Min ID and Max ID fields, you may randomize your model ID by clicking the "Randomize Model" button. This will automatically apply if Hide Mode is enabled.
 
 **ORIENTATION PANEL**
-
 Use this panel to rotate your model.
 
 **HIDE MODE**
-
 Ensure this button is active if you are a hider, this will swap your model for the chosen ID.
 
 ## How do I win?
