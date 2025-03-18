@@ -1,12 +1,15 @@
 package com.idyl.prophunt;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import javax.inject.Inject;
+import javax.inject.Provider;
+
 import net.runelite.api.Perspective;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.coords.LocalPoint;
@@ -21,6 +24,7 @@ import net.runelite.api.events.*;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.api.widgets.WidgetType;
+import net.runelite.client.RuntimeConfig;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.callback.Hooks;
 import net.runelite.client.chat.ChatColorType;
@@ -31,6 +35,7 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.OverlayMenuClicked;
+import net.runelite.client.menus.MenuManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.task.Schedule;
@@ -38,6 +43,7 @@ import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ImageUtil;
+import net.runelite.client.util.Text;
 
 import java.awt.*;
 import java.time.Duration;
@@ -59,11 +65,15 @@ public class PropHuntPlugin extends Plugin
 	@Inject
 	private Client client;
 
+	@Getter
 	@Inject
 	private PropHuntConfig config;
 
 	@Inject
 	private Hooks hooks;
+
+	@Inject
+	private Provider<MenuManager> menuManager;
 
 	@Inject
 	private ClientThread clientThread;
@@ -106,6 +116,7 @@ public class PropHuntPlugin extends Plugin
 	private static final int DOT_CLAN = 6;
 
 	private SpritePixels[] originalDotSprites;
+	private static final String ADD_HIDER = "Add Hider";
 
 	@Getter
 	private int rightClickCounter = 0;
@@ -119,7 +130,14 @@ public class PropHuntPlugin extends Plugin
 		setPlayersFromString(config.players());
 		getPlayerConfigs();
 		storeOriginalDots();
-		hideMinimapDots();
+		if(config.hideMinimapDots()) {
+			hideMinimapDots();
+		}
+
+		if (client != null)
+		{
+			menuManager.get().addPlayerMenuItem(ADD_HIDER);
+		}
 
 		panel = new PropHuntPanel(this);
 
@@ -143,6 +161,10 @@ public class PropHuntPlugin extends Plugin
 		hooks.unregisterRenderableDrawListener(drawListener);
 		clientToolbar.removeNavigation(navButton);
 		restoreOriginalDots();
+		if (client != null)
+		{
+			menuManager.get().removePlayerMenuItem(ADD_HIDER);
+		}
 	}
 
 	@Subscribe
@@ -259,6 +281,15 @@ public class PropHuntPlugin extends Plugin
 		if(!event.getOption().startsWith("Walk here")) {
 			if(config.depriorizteMenuOptions()) event.getMenuEntry().setDeprioritized(true);
 			return;
+		}
+
+	}
+
+	@Subscribe
+	public void onMenuOptionClicked(MenuOptionClicked event)
+	{
+		if (event.getMenuAction() == MenuAction.RUNELITE_PLAYER && event.getMenuOption().equals(ADD_HIDER)) {
+			configManager.setConfiguration("prophunt", "players", config.players() + ", " + event.getMenuEntry().getPlayer().getName());
 		}
 	}
 
@@ -581,7 +612,7 @@ public class PropHuntPlugin extends Plugin
 	}
 
 	@Provides
-	PropHuntConfig provideConfig(ConfigManager configManager)
+	PropHuntConfig getConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(PropHuntConfig.class);
 	}
