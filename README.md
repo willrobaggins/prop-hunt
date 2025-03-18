@@ -18,7 +18,7 @@ There are two menus to utilize, one for the Seeker and one for the Hider.
 
 Gather your friends and type their usernames  (comma separated)  in the Players field in the plugin settings. This will allow you to see the disguises of each respective user.
 
-![Config Menu](https://imgur.com/2UjN7vv.png)
+![Config Menu](https://imgur.com/Rsh6qEB.png)
 
 Seekers are encouraged to turn on each setting in this menu.
 
