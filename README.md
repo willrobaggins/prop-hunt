@@ -18,7 +18,7 @@ There are two menus to utilize, one for the Seeker and one for the Hider.
 
 Gather your friends and type their usernames  (comma separated)  in the Players field in the plugin settings. This will allow you to see the disguises of each respective user.
 
-![Config Menu](https://imgur.com/a/2UjN7vv)
+![Config Menu](https://imgur.com/a/2UjN7vv.png)
 
 Seekers are encouraged to turn on each setting in this menu.
 
@@ -32,12 +32,12 @@ Seekers are encouraged to turn on each setting in this menu.
 
 ## Hider Menu (Side Panel)
 
-![Navigating to Hider Menu](https://imgur.com/yLeUG8v)
+![Navigating to Hider Menu](https://imgur.com/yLeUG8v.png)
 
 You will find the Prop Hunt panel on the side of your RuneLite client, this is the main menu used by hiders. 
 *NOTE:* Hiders are encouraged to also add the player names in the config menu, but otherwise they only need to utilize this menu.
 
-![Hider Menu](https://imgur.com/qefQ6rf)
+![Hider Menu](https://imgur.com/qefQ6rf.png)
 
 **MODEL PANEL**
 In this panel, you have two options:
