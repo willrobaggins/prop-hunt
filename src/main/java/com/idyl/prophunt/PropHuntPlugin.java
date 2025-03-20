@@ -106,6 +106,8 @@ public class PropHuntPlugin extends Plugin {
 	private static final int TICK_INTERVAL = 250;
 	@Getter
 	private int rightClickCounter = 0;
+	private static final int RANDOM_MODEL_UPDATE_INTERVAL = 5000;
+	private long lastRandomModelUpdate = 0;
 
 	@Override
 	protected void startUp() throws Exception {
@@ -260,17 +262,6 @@ public class PropHuntPlugin extends Plugin {
 		addMenu();
 	}
 
-	private void updatePlayerDisguiseLocation(Player player) {
-		if (player == null || player == client.getLocalPlayer()) {
-			return;
-		}
-
-		RuneLiteObject disguise = playerDisguises.get(player.getName());
-		if (disguise != null) {
-			disguise.setLocation(player.getLocalLocation(), player.getWorldLocation().getPlane());
-		}
-	}
-
 	@Subscribe
 	public void onMenuOpened(MenuOpened event) {
 		if (config.limitRightClicks() && !config.hideMode()) {
@@ -291,6 +282,22 @@ public class PropHuntPlugin extends Plugin {
 			return;
 		}
 
+	}
+
+	@Subscribe
+	public void onOverlayMenuClicked(OverlayMenuClicked event) {
+		if (event.getEntry() == PropHuntOverlay.RESET_ENTRY) {
+			rightClickCounter = 0;
+		}
+	}
+
+	private void onMenuOptionClicked(MenuEntry menuEntry) {
+		if (Objects.equals(menuEntry.getOption(), GUESS)) {
+			String playerName = checkProp();
+			if (playerName != null) {
+				playerFound(playerName);
+			}
+		}
 	}
 
 	@Subscribe
@@ -320,7 +327,6 @@ public class PropHuntPlugin extends Plugin {
 				return;
 			}
 		}
-
 		client.createMenuEntry(1)
 				.setOption(GUESS)
 				.setType(MenuAction.GAME_OBJECT_SECOND_OPTION)
@@ -330,13 +336,29 @@ public class PropHuntPlugin extends Plugin {
 				.onClick(this::onMenuOptionClicked);
 	}
 
-	private void onMenuOptionClicked(MenuEntry menuEntry) {
-		if (Objects.equals(menuEntry.getOption(), GUESS)) {
-			String playerName = checkProp();
-			if (playerName != null) {
-				playerFound(playerName);
+	private String checkProp(){
+		Point mouseCanvasPosition = client.getMouseCanvasPosition();
+
+		for (String player: getPlayerNames()) {
+			System.out.println(player);
+			RuneLiteObject disguise = playerDisguises.get(player);
+			if (disguise == null) {
+				continue;
+			}
+			LocalPoint lp = disguise.getLocation();
+			Model disguiseModel = client.loadModel(playersData.get(player).modelID);
+			System.out.println(mouseCanvasPosition.getX() + " " + mouseCanvasPosition.getY());
+
+			if (disguiseModel != null) {
+				SimplePolygon aabb = RLUtils.calculateAABB(client, disguiseModel, disguise.getOrientation(), lp.getX(), lp.getY(), 0);
+
+				if (aabb.contains(mouseCanvasPosition.getX(), mouseCanvasPosition.getY()))
+				{
+					return player;
+				}
 			}
 		}
+		return null;
 	}
 
 	private void playerFound(String playerName) {
@@ -352,13 +374,6 @@ public class PropHuntPlugin extends Plugin {
 		client.playSoundEffect(2396);
 		client.playSoundEffect(2379);
 		sendHighlightedChatMessage(playerName + " has been found!");
-	}
-
-	@Subscribe
-	public void onOverlayMenuClicked(OverlayMenuClicked event) {
-		if (event.getEntry() == PropHuntOverlay.RESET_ENTRY) {
-			rightClickCounter = 0;
-		}
 	}
 
 	private void sendNormalChatMessage(String message) {
@@ -527,11 +542,52 @@ public class PropHuntPlugin extends Plugin {
 		}
 	}
 
-	private void updateDisguiseLocation(Player p) {
-		RuneLiteObject obj = playerDisguises.get(p.getName());
-		if(obj == null) return;
+	private void updatePlayerDisguiseLocation(Player player) {
+		if (player == null || player == client.getLocalPlayer()) {
+			return;
+		}
 
-		obj.setLocation(p.getLocalLocation(), p.getWorldLocation().getPlane());
+		RuneLiteObject disguise = playerDisguises.get(player.getName());
+		if (disguise != null) {
+			disguise.setLocation(player.getLocalLocation(), player.getWorldLocation().getPlane());
+		}
+	}
+
+	public void updatePlayerData(HashMap<String, PropHuntPlayerData> data) {
+		clientThread.invokeLater(() -> {
+			removeTransmogs();
+			playersData.clear();
+			playerDisguises.clear();
+			playersData.putAll(data);
+			playersData.values().forEach(player -> playerDisguises.put(player.username, null));
+			transmogOtherPlayers();
+		});
+	}
+
+	public void updatePlayerList(String[] playerList) {
+		String p = "";
+		if (playerList == null) p = "";
+		else p = String.join("\n", playerList);
+
+		setPlayersFromString(p);
+		configManager.setConfiguration(CONFIG_KEY, "players", p);
+	}
+
+	private void updateDropdown() {
+		String[] modelList = config.models().split(",");
+		PropHuntModelId.map.clear();
+
+		for(String model : modelList) {
+			model = model.trim();
+
+			if(!modelEntry.matcher(model).matches()) continue;
+
+			String modelName = model.split(":")[0].trim();
+			String modelId = model.split(":")[1].trim();
+
+			PropHuntModelId.add(modelName, Integer.parseInt(modelId));
+		}
+		//panel.updateComboBox();
 	}
 
 	private void setPlayersFromString(String playersString) {
@@ -561,26 +617,6 @@ public class PropHuntPlugin extends Plugin {
 		if(playerData == null) return false;
 
 		return playerData.hiding;
-	}
-
-	public void updatePlayerData(HashMap<String, PropHuntPlayerData> data) {
-		clientThread.invokeLater(() -> {
-			removeTransmogs();
-			playersData.clear();
-			playerDisguises.clear();
-			playersData.putAll(data);
-			playersData.values().forEach(player -> playerDisguises.put(player.username, null));
-			transmogOtherPlayers();
-		});
-	}
-
-	public void updatePlayerList(String[] playerList) {
-		String p = "";
-		if (playerList == null) p = "";
-		else p = String.join("\n", playerList);
-
-		setPlayersFromString(p);
-		configManager.setConfiguration(CONFIG_KEY, "players", p);
 	}
 
 	private void hideMinimapDots() {
@@ -619,6 +655,10 @@ public class PropHuntPlugin extends Plugin {
 		System.arraycopy(originalDotSprites, 0, mapDots, 0, mapDots.length);
 	}
 
+	public String[] getPlayerNames() {
+		return players;
+	}
+
 	public int getMin() {
 		return config.randMinID();
 	}
@@ -627,53 +667,21 @@ public class PropHuntPlugin extends Plugin {
 		return config.randMaxID();
 	}
 
-
 	public int getModelId() {
 		return config.modelID();
 	}
-
-	private static final int RANDOM_MODEL_UPDATE_INTERVAL = 5000;
-	private long lastRandomModelUpdate = 0;
 
 	public void setRandomModelID() {
 		long currentTime = System.currentTimeMillis();
 		if (currentTime - lastRandomModelUpdate < RANDOM_MODEL_UPDATE_INTERVAL) {
 			return;
 		}
-
 		configManager.setConfiguration(CONFIG_KEY, "modelID", ThreadLocalRandom.current().nextInt(config.randMinID(), config.randMaxID() + 1));
 		lastRandomModelUpdate = currentTime; // Update the timestamp
 	}
 
-
-	private void updateDropdown() {
-		String[] modelList = config.models().split(",");
-		PropHuntModelId.map.clear();
-
-		for(String model : modelList) {
-			model = model.trim();
-
-			if(!modelEntry.matcher(model).matches()) continue;
-
-			String modelName = model.split(":")[0].trim();
-			String modelId = model.split(":")[1].trim();
-
-			PropHuntModelId.add(modelName, Integer.parseInt(modelId));
-		}
-		//panel.updateComboBox();
-	}
-
 	public void setModelID(PropHuntModelId modelData) {
 		configManager.setConfiguration(CONFIG_KEY, "modelID", modelData.getId());
-	}
-
-	public void rotateModel(int dir) {
-		if(localDisguise != null) {
-			 int orientation = config.orientation() + 500*dir;
-			 orientation = (((orientation % 2000) + 2000) % 2000);
-			localDisguise.setOrientation(orientation);
-			configManager.setConfiguration(CONFIG_KEY, "orientation", orientation);
-		}
 	}
 
 	public void setMinModelID(int minModelID) {
@@ -684,33 +692,13 @@ public class PropHuntPlugin extends Plugin {
 		configManager.setConfiguration(CONFIG_KEY, "randMaxID", maxModelID);
 	}
 
-	public String[] getPlayerNames() {
-		return players;
-	}
-
-	private String checkProp(){
-		Point mouseCanvasPosition = client.getMouseCanvasPosition();
-
-		for (String player: getPlayerNames()) {
-			System.out.println(player);
-			RuneLiteObject disguise = playerDisguises.get(player);
-			if (disguise == null) {
-				continue;
-			}
-			LocalPoint lp = disguise.getLocation();
-			Model disguiseModel = client.loadModel(playersData.get(player).modelID);
-			System.out.println(mouseCanvasPosition.getX() + " " + mouseCanvasPosition.getY());
-
-			if (disguiseModel != null) {
-				SimplePolygon aabb = RLUtils.calculateAABB(client, disguiseModel, disguise.getOrientation(), lp.getX(), lp.getY(), 0);
-
-				if (aabb.contains(mouseCanvasPosition.getX(), mouseCanvasPosition.getY()))
-				{
-					return player;
-				}
-			}
+	public void rotateModel(int dir) {
+		if(localDisguise != null) {
+			int orientation = config.orientation() + 500*dir;
+			orientation = (((orientation % 2000) + 2000) % 2000);
+			localDisguise.setOrientation(orientation);
+			configManager.setConfiguration(CONFIG_KEY, "orientation", orientation);
 		}
-		return null;
 	}
 
 	@Provides
