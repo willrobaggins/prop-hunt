@@ -340,14 +340,12 @@ public class PropHuntPlugin extends Plugin {
 		Point mouseCanvasPosition = client.getMouseCanvasPosition();
 
 		for (String player: getPlayerNames()) {
-			System.out.println(player);
 			RuneLiteObject disguise = playerDisguises.get(player);
 			if (disguise == null) {
 				continue;
 			}
 			LocalPoint lp = disguise.getLocation();
 			Model disguiseModel = client.loadModel(playersData.get(player).modelID);
-			System.out.println(mouseCanvasPosition.getX() + " " + mouseCanvasPosition.getY());
 
 			if (disguiseModel != null) {
 				SimplePolygon aabb = RLUtils.calculateAABB(client, disguiseModel, disguise.getOrientation(), lp.getX(), lp.getY(), 0);
