@@ -25,7 +25,7 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
         setLayout(new BorderLayout());
 
         // Add padding to the top of the whole panel
-        setBorder(BorderFactory.createEmptyBorder(40, 0, 0, 0));  // 20px padding to the top
+        setBorder(BorderFactory.createEmptyBorder(40, 0, 0, 0));
 
         // Create a container panel for the title with padding
         JPanel titlePanel = new JPanel();
@@ -40,7 +40,7 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
         titlePanel.add(title, BorderLayout.CENTER);
 
         // Add padding to the bottom of the title by setting an EmptyBorder on the title panel
-        titlePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0)); // 0 top, 0 left, 10 bottom, 0 right padding
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
         // Add the titlePanel (with padding) to the top of the main panel
         add(titlePanel, BorderLayout.NORTH);
@@ -48,12 +48,12 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
         // Create subtitle section below the title
         JPanel subtitlePanel = new JPanel();
         JLabel subtitle = new JLabel("Hider Settings:");
-        subtitle.setFont(FontManager.getRunescapeBoldFont().deriveFont(20f));  // Slightly smaller size
+        subtitle.setFont(FontManager.getRunescapeBoldFont().deriveFont(20f));
         subtitle.setHorizontalAlignment(SwingConstants.CENTER);
         subtitlePanel.add(subtitle);
 
         // Add padding to the subtitle
-        subtitlePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0)); // Padding below subtitle
+        subtitlePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
 
         // Add the subtitlePanel right below the title section
         add(subtitlePanel, BorderLayout.CENTER);
@@ -69,13 +69,12 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
 
         // Add all sections to the main panel
         JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS)); // Arrange sections vertically
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.add(modelPanel);
         contentPanel.add(orientationPanel);
         contentPanel.add(hideModePanel);
 
-        // Add the content panel with all sections to the center of the overall panel
-        add(contentPanel, BorderLayout.SOUTH); // Placing the sections below the subtitle
+        add(contentPanel, BorderLayout.SOUTH);
     }
 
     private JPanel createModelPanel() {
@@ -83,22 +82,20 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
         panel.setLayout(new GridBagLayout());
         panel.setToolTipText("Set your Model ID.");
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder("Model"),  // Original titled border
-                BorderFactory.createEmptyBorder(2, 0, 7, 0)  // 10px top padding, 0 for left, right, and bottom
+                BorderFactory.createTitledBorder("Model"),
+                BorderFactory.createEmptyBorder(2, 0, 7, 0)
         ));
         GridBagConstraints gbc = new GridBagConstraints();
 
-        // Add label for the model ID text field
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.insets = new Insets(5, 0, 5, 0);
         JLabel modelIdLabel = new JLabel("Model ID");
         panel.add(modelIdLabel, gbc);
 
-        // Create and configure the text field for numeric input (Model ID)
         modelIdTextField = new JTextField(10);
-        modelIdTextField.setText(String.valueOf(plugin.getModelId()));  // Set default value from plugin
-        ((AbstractDocument) modelIdTextField.getDocument()).setDocumentFilter(new NumericDocumentFilter());  // Allow only numeric input
+        modelIdTextField.setText(String.valueOf(plugin.getModelId()));
+        ((AbstractDocument) modelIdTextField.getDocument()).setDocumentFilter(new NumericDocumentFilter());
         modelIdTextField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -117,25 +114,23 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
 
             private void updateModelId() {
                 try {
-                    int modelId = Integer.parseInt(modelIdTextField.getText());  // Parse the model ID
-                    plugin.setModelID(new PropHuntModelId("", modelId));  // Update the plugin with the new model ID
+                    int modelId = Integer.parseInt(modelIdTextField.getText());
+                    plugin.setModelID(new PropHuntModelId("", modelId));
                 } catch (NumberFormatException ex) {
-                    // In case of invalid input, keep the text field content as-is or reset it
-                    modelIdTextField.setText("");  // Clear or reset on invalid input
+                    modelIdTextField.setText("");
                 }
             }
         });
         gbc.gridx = 1;
         panel.add(modelIdTextField, gbc);
 
-        // Create a panel to encapsulate min and max ID settings
         JPanel randomPanel = new JPanel();
         randomPanel.setLayout(new GridBagLayout());
         randomPanel.setToolTipText("Set the range of the model IDs you would like to randomize from.");
         randomPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder("Randomizer"),
                 BorderFactory.createEmptyBorder(2, 30, 7, 30)
-        ));  // Updated to "Randomizer" title
+        ));
 
         // Add min ID label and field
         gbc.gridx = 0;
@@ -274,12 +269,11 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
         return panel;
     }
 
-    private JPanel createHideModePanel() {
+    public JPanel createHideModePanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0)); // No label, just padding
 
-        // Hide Mode toggle button
         hideModeToggleButton = new JToggleButton();
         hideModeToggleButton.setSelected(plugin.getHideMode());
         if(plugin.getHideMode()) {
@@ -291,17 +285,15 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
         hideModeToggleButton.addActionListener(e -> toggleHideMode());
         hideModeToggleButton.setFont(FontManager.getRunescapeBoldFont());
 
-        // Highlight the toggle button when selected
         hideModeToggleButton.setBackground(Color.DARK_GRAY);
         hideModeToggleButton.setForeground(hideModeToggleButton.isSelected() ? Color.GREEN : Color.RED);
 
-        // Listen for state change to update the appearance
         hideModeToggleButton.addChangeListener(e -> {
             if (hideModeToggleButton.isSelected()) {
-                hideModeToggleButton.setForeground(Color.WHITE); // Highlight when selected
+                hideModeToggleButton.setForeground(Color.WHITE);
                 hideModeToggleButton.setText("Hide Mode: ON");
             } else {
-                hideModeToggleButton.setForeground(Color.RED); // Unhighlight when deselected
+                hideModeToggleButton.setForeground(Color.RED);
                 hideModeToggleButton.setText("Hide Mode: OFF");
             }
         });
@@ -311,28 +303,36 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
         return panel;
     }
 
+    public void updatePanelWithDefaults() {
+        PropHuntConfig config = plugin.getConfig();
+        hideModeToggleButton.setSelected(config.hideMode());
+        hideModeToggleButton.setText(config.hideMode() ? "Hide Mode: ON" : "Hide Mode: OFF");
+        hideModeToggleButton.setForeground(config.hideMode() ? Color.GREEN : Color.RED);
+    }
+
+    private void updateHideModeButtonText(JToggleButton button, boolean isHideModeOn) {
+        if (isHideModeOn) {
+            button.setText("Hide Mode: ON");
+            button.setForeground(Color.GREEN);
+        } else {
+            button.setText("Hide Mode: OFF");
+            button.setForeground(Color.RED);
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         plugin.setRandomModelID();
-
-        // Get the new model ID (after randomization)
-        int newModelID = plugin.getModelId();  // Get the current model ID from the plugin
-
-        // Set the new model ID in the text field
+        int newModelID = plugin.getModelId();
         modelIdTextField.setText(String.valueOf(newModelID));
-
-        // Also update the plugin with the newly randomized model ID
         plugin.setModelID(new PropHuntModelId("", newModelID));
-
     }
 
-    // Method to toggle hideMode when the toggle button is clicked
     private void toggleHideMode() {
         boolean currentHideMode = hideModeToggleButton.isSelected();
-        plugin.setHideMode(currentHideMode);  // Update the config and the plugin state
+        plugin.setHideMode(currentHideMode);
     }
 
-    // Custom DocumentFilter to allow only numeric input
     static class NumericDocumentFilter extends javax.swing.text.DocumentFilter {
         @Override
         public void insertString(FilterBypass fb, int offset, String string, javax.swing.text.AttributeSet attr)

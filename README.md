@@ -16,9 +16,15 @@ There are two menus to utilize, one for the Seeker and one for the Hider.
 
 ## Config menu (Seeker menu)
 
-Gather your friends and type their usernames  (comma separated)  in the Players field in the plugin settings. This will allow you to see the disguises of each respective user.
+Gather your friends and type their usernames  (separated by new line)  in the Players field in the plugin settings. This will allow you to see the disguises of each respective user. You can also right-click on players and select "Add Hider" to add them to the list.
 
-![Config Menu](https://imgur.com/Rsh6qEB.png)
+![Config Menu](https://imgur.com/AjijeCm.png)
+**LOBBY SETUP**
+The lobby system works as it always had, but now, using the Lobby ID box , you can enter a player's RSN name and it will populate your player list with their current player list. Use the Lobby ID to synchronize your game sessions.
+
+*On-Screen Player List:* will display all active hiders in the current session/lobby.
+
+**SEEKER SETTINGS**
 
 Seekers are encouraged to turn on each setting in this menu.
 
@@ -29,6 +35,8 @@ Seekers are encouraged to turn on each setting in this menu.
 *Limit Right Clicks:* Limit the number of right clicks a seeker can do. (Guesses they may take)
 
 *Maximum Right Clicks:* The number of guesses a seeker can make.
+
+*NOTE: If you right click on an object, you will see an option "Guess". THIS IS AN EXPERIMENTAL MECHANIC and currently is not 100% accurate (typically when camera pitch is more parallel to the ground - works best with about a 60 degree angle pitch). This mechanic currently removes the hider from your player list / lobby, and will send a chat message that the player has been found.*
 
 ## Hider Menu (Side Panel)
 
@@ -53,3 +61,4 @@ Ensure this button is active if you are a hider, this will swap your model for t
 ## How do I win?
 
 That's really for you to decide.  This plugin is left open,  so you can create your own win conditions  or rules around the idea of hiding as a game object!
+

@@ -5,6 +5,7 @@ public class PropHuntPlayerData {
     public String username;
     public boolean hiding;
     public int orientation;
+    public int[] xy = new int[2];
 
     public PropHuntPlayerData(String username, boolean hiding, int modelID, int orientation) {
         this.username = username;

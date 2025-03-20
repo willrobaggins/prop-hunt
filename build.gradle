@@ -24,7 +24,7 @@ dependencies {
 }
 
 group = 'com.idyl.prophunt'
-version = '1.2.2'
+version = '1.2.3'
 sourceCompatibility = "11"
 
 tasks.withType(JavaCompile) {

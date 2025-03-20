@@ -7,15 +7,18 @@ import okhttp3.*;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.swing.*;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.*;
+
 
 @Slf4j
 @Singleton
 public class PropHuntDataManager {
     @Getter
-    public final String DEFAULT_URL = "http://18.117.185.87:8080";
-    private String baseUrl = DEFAULT_URL;
+    public final String DEFAULT_URL = "http://18.117.185.87";
+    private String app1Url = DEFAULT_URL + ":8080";
+    private String app2Url = DEFAULT_URL + ":5000";
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     @Inject
@@ -28,14 +31,14 @@ public class PropHuntDataManager {
     private Gson gson;
 
     public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
+        this.app1Url = baseUrl;
         log.debug("Setting base url: " + baseUrl);
     }
 
     protected void updatePropHuntApi(PropHuntPlayerData data)
     {
         String username = urlifyString(data.username);
-        String url = baseUrl.concat("/prop-hunters/"+username);
+        String url = app1Url.concat("/prop-hunters/"+username);
 
         try
         {
@@ -78,7 +81,7 @@ public class PropHuntDataManager {
         String playersString = urlifyString(String.join(",", players));
         try {
             Request r = new Request.Builder()
-                    .url(baseUrl.concat("/prop-hunters/".concat(playersString)))
+                    .url(app1Url.concat("/prop-hunters/".concat(playersString)))
                     .get()
                     .build();
 
@@ -113,31 +116,26 @@ public class PropHuntDataManager {
 
         for (JsonElement jsonElement : j)
         {
-            // Check if the jsonElement is actually an object
             if (!jsonElement.isJsonObject()) {
-                continue; // Skip if the element is not a JsonObject
+                continue;
             }
 
             JsonObject jObj = jsonElement.getAsJsonObject();
 
-            // Check if required fields are null or missing before attempting to parse
             if (jObj.get("username") == null || jObj.get("username").isJsonNull()) {
-                continue; // Skip if "username" is null or missing
+                continue;
             }
 
             String username = jObj.get("username").getAsString();
 
-            // Check if "hiding", "modelID", and "orientation" are available
             Boolean hiding = jObj.has("hiding") ? jObj.get("hiding").getAsBoolean() : null;
             Integer modelID = jObj.has("modelID") ? (jObj.get("modelID").isJsonNull() ? null : jObj.get("modelID").getAsInt()) : null;
             Integer orientation = jObj.has("orientation") ? (jObj.get("orientation").isJsonNull() ? null : jObj.get("orientation").getAsInt()) : null;
 
-            // If any of these values are null, skip this entry
             if (hiding == null || modelID == null || orientation == null) {
-                continue; // Skip if any of the necessary fields are missing or null
+                continue;
             }
 
-            // Create and store the player data if all fields are valid
             PropHuntPlayerData d = new PropHuntPlayerData(username, hiding, modelID, orientation);
             l.put(username, d);
         }
@@ -145,7 +143,96 @@ public class PropHuntDataManager {
         return l;
     }
 
+    public void fetchPlayers(String lobby_id){
+        if (lobby_id == null || lobby_id.isEmpty()) {
+            plugin.updatePlayerList(null);
+            lobby_id = "";
+        }
+        try {
+            Request r = new Request.Builder()
+                    .url(app2Url.concat("/lobbies/".concat(urlifyString(lobby_id))))
+                    .get()
+                    .build();
+
+            okHttpClient.newCall(r).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    log.info("Error getting lobby by lobby ID.", e);
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        try {
+                            JsonArray j = gson.fromJson(response.body().string(), JsonArray.class);
+                            String[] playerList = new String[j.size()];
+                            for (int i = 0; i < j.size(); i++){
+                                JsonElement element = j.get(i);
+                                if (element != null) {
+                                    playerList[i] = element.getAsString();
+                                }
+                            }
+                            plugin.updatePlayerList(playerList);
+                        } catch (IOException | NullPointerException | JsonSyntaxException e) {
+                            log.error(e.getMessage());
+                        }
+                    }
+
+                    response.close();
+                }
+            });
+        } catch (IllegalArgumentException e) {
+            log.error("Bad URL given: " + e.getLocalizedMessage());
+        }
+
+    }
+
+    public void createLobby(String user, String data) {
+        String username = urlifyString(user);
+        String url = app2Url.concat("/lobbies/" + username);
+
+        List<String> playerList;
+        if (data != null && !data.trim().isEmpty()) {
+            playerList = Arrays.asList(data.trim().split(","));
+        } else {
+            playerList = new ArrayList<>();
+        }
+
+        try {
+            Request r = new Request.Builder()
+                    .url(url)
+                    .post(RequestBody.create(MediaType.parse("application/json"), gson.toJson(playerList)))
+                    .build();
+
+            okHttpClient.newCall(r).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    log.debug("Error sending post data", e);
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) {
+                    if (response.isSuccessful()) {
+                        log.debug("Successfully sent prop hunt data");
+                        response.close();
+                    } else {
+                        log.debug("Post request unsuccessful");
+                        response.close();
+                    }
+                }
+            });
+        } catch (IllegalArgumentException e) {
+            log.error("Bad URL given: " + e.getLocalizedMessage());
+        }
+    }
+
+
     private String urlifyString(String str) {
         return str.trim().replaceAll("\\s", "%20");
+    }
+
+    public String[] convertMapToStringArray(HashMap<String, ?> map) {
+        Set<String> keys = map.keySet();
+        return keys.toArray(new String[0]);
     }
 }
