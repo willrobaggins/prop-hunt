@@ -349,6 +349,8 @@ public class PropHuntPlugin extends Plugin {
 			configManager.setConfiguration(CONFIG_KEY, "players", newPlayers);
 			rightClickCounter--;
 		}
+		client.playSoundEffect(2396);
+		client.playSoundEffect(2379);
 		sendHighlightedChatMessage(playerName + " has been found!");
 	}
 
