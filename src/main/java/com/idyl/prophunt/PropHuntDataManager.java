@@ -16,7 +16,7 @@ import java.util.*;
 @Singleton
 public class PropHuntDataManager {
     @Getter
-    public final String DEFAULT_URL = "http://18.117.185.87";
+    public final String DEFAULT_URL = "http://3.133.56.193";
     private String app1Url = DEFAULT_URL + ":8080";
     private String app2Url = DEFAULT_URL + ":5000";
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
