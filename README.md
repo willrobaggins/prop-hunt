@@ -19,6 +19,7 @@ There are two menus to utilize, one for the Seeker and one for the Hider.
 Gather your friends and type their usernames  (separated by new line)  in the Players field in the plugin settings. This will allow you to see the disguises of each respective user. You can also right-click on players and select "Add Hider" to add them to the list.
 
 ![Config Menu](https://imgur.com/AjijeCm.png)
+
 **LOBBY SETUP**
 The lobby system works as it always had, but now, using the Lobby ID box , you can enter a player's RSN name and it will populate your player list with their current player list. Use the Lobby ID to synchronize your game sessions.
 
