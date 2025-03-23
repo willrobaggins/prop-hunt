@@ -324,7 +324,9 @@ public class PropHuntPlugin extends Plugin {
 	}
 
 	public void addMenu() {
-		for (MenuEntry menuEntry : client.getMenuEntries()) {
+		MenuEntry[] menuEntries = client.getMenuEntries();
+		if (menuEntries.length < 2) return;
+		for (MenuEntry menuEntry : menuEntries) {
 			if (Objects.equals(menuEntry.getType().toString(), "CC_OP") || Objects.equals(menuEntry.getType().toString(), "RUNELITE_PLAYER")) {
 				return;
 			}
