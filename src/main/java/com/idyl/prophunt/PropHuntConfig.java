@@ -43,7 +43,7 @@ public interface PropHuntConfig extends Config {
 
 	@ConfigItem(
 			keyName = "alternate",
-			name = "Use alternate API server?",
+			name = "Use alternate API server",
 			description = "Toggle use of alternate api server. (ADVANCED)",
 			position = 1,
 			section = advancedSettings

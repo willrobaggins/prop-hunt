@@ -16,7 +16,7 @@ import java.util.*;
 @Singleton
 public class PropHuntDataManager {
     @Getter
-    public final String DEFAULT_URL = "http://18.117.185.87";
+    public String DEFAULT_URL = "http://3.133.56.193";
     private String app1Url = DEFAULT_URL + ":8080";
     private String app2Url = DEFAULT_URL + ":5000";
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
@@ -31,8 +31,8 @@ public class PropHuntDataManager {
     private Gson gson;
 
     public void setBaseUrl(String baseUrl) {
-        this.app1Url = baseUrl;
-        log.debug("Setting base url: " + baseUrl);
+        this.DEFAULT_URL = baseUrl;
+        log.debug("Setting base url: " + DEFAULT_URL);
     }
 
     protected void updatePropHuntApi(PropHuntPlayerData data)
@@ -143,6 +143,45 @@ public class PropHuntDataManager {
         return l;
     }
 
+    public void createLobby(String user, String data) {
+        String username = urlifyString(user);
+        String url = app2Url.concat("/lobbies/" + username);
+
+        List<String> playerList;
+        if (data != null && !data.trim().isEmpty()) {
+            playerList = Arrays.asList(data.trim().split(","));
+        } else {
+            playerList = new ArrayList<>();
+        }
+
+        try {
+            Request r = new Request.Builder()
+                    .url(url)
+                    .post(RequestBody.create(MediaType.parse("application/json"), gson.toJson(playerList)))
+                    .build();
+
+            okHttpClient.newCall(r).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    log.debug("Error sending post data", e);
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) {
+                    if (response.isSuccessful()) {
+                        log.debug("Successfully sent prop hunt data");
+                        response.close();
+                    } else {
+                        log.debug("Post request unsuccessful");
+                        response.close();
+                    }
+                }
+            });
+        } catch (IllegalArgumentException e) {
+            log.error("Bad URL given: " + e.getLocalizedMessage());
+        }
+    }
+
     public void fetchPlayers(String lobby_id){
         if (lobby_id == null || lobby_id.isEmpty()) {
             plugin.updatePlayerList(null);
@@ -187,52 +226,7 @@ public class PropHuntDataManager {
 
     }
 
-    public void createLobby(String user, String data) {
-        String username = urlifyString(user);
-        String url = app2Url.concat("/lobbies/" + username);
-
-        List<String> playerList;
-        if (data != null && !data.trim().isEmpty()) {
-            playerList = Arrays.asList(data.trim().split(","));
-        } else {
-            playerList = new ArrayList<>();
-        }
-
-        try {
-            Request r = new Request.Builder()
-                    .url(url)
-                    .post(RequestBody.create(MediaType.parse("application/json"), gson.toJson(playerList)))
-                    .build();
-
-            okHttpClient.newCall(r).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    log.debug("Error sending post data", e);
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) {
-                    if (response.isSuccessful()) {
-                        log.debug("Successfully sent prop hunt data");
-                        response.close();
-                    } else {
-                        log.debug("Post request unsuccessful");
-                        response.close();
-                    }
-                }
-            });
-        } catch (IllegalArgumentException e) {
-            log.error("Bad URL given: " + e.getLocalizedMessage());
-        }
-    }
-
-
     private String urlifyString(String str) {
         return str.trim().replaceAll("\\s", "%20");
-    }
-
-    public String[] convertMapToStringArray(HashMap<String, ?> map) {
-        Set<String> keys = map.keySet();
-        return keys.toArray(new String[0]);
     }
 }

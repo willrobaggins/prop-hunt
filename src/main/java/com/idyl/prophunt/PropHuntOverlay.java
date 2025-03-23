@@ -1,5 +1,8 @@
 package com.idyl.prophunt;
 
+import net.runelite.api.Client;
+import net.runelite.api.Perspective;
+import net.runelite.api.coords.LocalPoint;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.*;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -31,7 +34,6 @@ public class PropHuntOverlay extends OverlayPanel {
 
     @Override
     public Dimension render(Graphics2D graphics) {
-
         String[] playerNames = plugin.getPlayerNames();
 
         if (playerNames != null && playerNames.length > 0) {
@@ -105,7 +107,6 @@ public class PropHuntOverlay extends OverlayPanel {
                 panelComponent.getChildren().add(rightClicksRemainingComponent);
             }
         }
-
         return super.render(graphics);
     }
 

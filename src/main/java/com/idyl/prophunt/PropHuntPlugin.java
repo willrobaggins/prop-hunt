@@ -46,7 +46,8 @@ public class PropHuntPlugin extends Plugin {
 	public final String CONFIG_KEY = "prophunt";
 	public final Pattern modelEntry = Pattern.compile("[a-zA-Z]+:[ ]?[0-9]+");
 
-	@Inject
+	@Getter
+    @Inject
 	private Client client;
 
 	@Getter
@@ -108,6 +109,7 @@ public class PropHuntPlugin extends Plugin {
 	private int rightClickCounter = 0;
 	private static final int RANDOM_MODEL_UPDATE_INTERVAL = 5000;
 	private long lastRandomModelUpdate = 0;
+	public Polygon model_shape;
 
 	@Override
 	protected void startUp() throws Exception {
@@ -338,6 +340,8 @@ public class PropHuntPlugin extends Plugin {
 
 	private String checkProp(){
 		Point mouseCanvasPosition = client.getMouseCanvasPosition();
+		//int cameraPitch = client.getCameraPitch();
+		//double cameraYOffset = calculateY(cameraPitch);
 
 		for (String player: getPlayerNames()) {
 			RuneLiteObject disguise = playerDisguises.get(player);
@@ -346,10 +350,8 @@ public class PropHuntPlugin extends Plugin {
 			}
 			LocalPoint lp = disguise.getLocation();
 			Model disguiseModel = client.loadModel(playersData.get(player).modelID);
-
 			if (disguiseModel != null) {
 				SimplePolygon aabb = RLUtils.calculateAABB(client, disguiseModel, disguise.getOrientation(), lp.getX(), lp.getY(), 0);
-
 				if (aabb.contains(mouseCanvasPosition.getX(), mouseCanvasPosition.getY()))
 				{
 					return player;
@@ -359,13 +361,23 @@ public class PropHuntPlugin extends Plugin {
 		return null;
 	}
 
+	public static double calculateY(double x) {
+		double a = -0.001;
+		double b = 50;
+
+        return (a * ((x - 280) * (x - 280))) + b;
+	}
+
 	private void playerFound(String playerName) {
 		removePlayerTransmog(playerName);
 
 		PropHuntPlayerData playerData = playersData.get(playerName);
 		if (playerData != null) {
 			playerData.hiding = false;
-			String newPlayers = config.players().replace(playerName, "");
+			String newPlayers = config.players().replace(playerName, "").replaceAll("(?m)^[\\s]*$\\n?", "");;
+			if (newPlayers.endsWith("\n")) {
+				newPlayers = newPlayers.substring(0, newPlayers.length() - 1);
+			}
 			configManager.setConfiguration(CONFIG_KEY, "players", newPlayers);
 			rightClickCounter--;
 		}
@@ -432,20 +444,6 @@ public class PropHuntPlugin extends Plugin {
 			return true;
 		}
 		return true;
-	}
-
-	public boolean getHideMode() {
-		return config.hideMode();
-	}
-
-	public void setHideMode(boolean hideMode) {
-		configManager.setConfiguration(CONFIG_KEY, "hideMode", hideMode);
-
-		if (hideMode) {
-			clientThread.invokeLater(() -> transmogPlayer(client.getLocalPlayer()));
-		} else {
-			clientThread.invokeLater(this::removeLocalTransmog);
-		}
 	}
 
 	private void transmogPlayer(Player player) {
@@ -588,27 +586,6 @@ public class PropHuntPlugin extends Plugin {
 		//panel.updateComboBox();
 	}
 
-	private void setPlayersFromString(String playersString) {
-		String[] p = playersString.split("\n");
-
-		for(int i=0;i<p.length;i++) {
-			p[i] = p[i].trim();
-		}
-
-		players = p;
-	}
-
-	@Schedule(
-			period = SECONDS_BETWEEN_GET,
-			unit = ChronoUnit.SECONDS,
-			asynchronous = true
-	)
-	public void getPlayerConfigs() {
-		if(players.length < 1 || config.players().isEmpty()) return;
-
-		propHuntDataManager.getPropHuntersByUsernames(players);
-	}
-
 	public boolean isHiding(String name) {
 		if(name == null) return false;
 		PropHuntPlayerData playerData = playersData.get(name);
@@ -653,7 +630,18 @@ public class PropHuntPlugin extends Plugin {
 		System.arraycopy(originalDotSprites, 0, mapDots, 0, mapDots.length);
 	}
 
-	public String[] getPlayerNames() {
+	@Schedule(
+			period = SECONDS_BETWEEN_GET,
+			unit = ChronoUnit.SECONDS,
+			asynchronous = true
+	)
+	public void getPlayerConfigs() {
+		if(players.length < 1 || config.players().isEmpty()) return;
+
+		propHuntDataManager.getPropHuntersByUsernames(players);
+	}
+
+    public String[] getPlayerNames() {
 		return players;
 	}
 
@@ -667,6 +655,30 @@ public class PropHuntPlugin extends Plugin {
 
 	public int getModelId() {
 		return config.modelID();
+	}
+
+	public boolean getHideMode() {
+		return config.hideMode();
+	}
+
+	private void setPlayersFromString(String playersString) {
+		String[] p = playersString.split("\n");
+
+		for(int i=0;i<p.length;i++) {
+			p[i] = p[i].trim();
+		}
+
+		players = p;
+	}
+
+	public void setHideMode(boolean hideMode) {
+		configManager.setConfiguration(CONFIG_KEY, "hideMode", hideMode);
+
+		if (hideMode) {
+			clientThread.invokeLater(() -> transmogPlayer(client.getLocalPlayer()));
+		} else {
+			clientThread.invokeLater(this::removeLocalTransmog);
+		}
 	}
 
 	public void setRandomModelID() {
