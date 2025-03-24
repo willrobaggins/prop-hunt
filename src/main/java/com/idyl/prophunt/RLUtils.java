@@ -98,7 +98,8 @@ public class RLUtils {
         }
     }
 
-    public static SimplePolygon calculateAABB(Client client, Model m, int jauOrient, int x, int y, int z) {
+    public static SimplePolygon calculateAABB(Client client, Model m, int jauOrient, int x, int y, int z, int padding) {
+        // Get the AABB of the model
         AABB aabb = m.getAABB(jauOrient);
 
         int x1 = aabb.getCenterX();
@@ -109,6 +110,7 @@ public class RLUtils {
         int ey = aabb.getExtremeZ();
         int ez = aabb.getExtremeY();
 
+        // Calculate the AABB boundaries
         int x2 = x1 + ex;
         int y2 = y1 + ey;
         int z2 = z1 + ez;
@@ -117,6 +119,16 @@ public class RLUtils {
         y1 -= ey;
         z1 -= ez;
 
+        // Expand the bounding box by the padding value
+        x1 -= padding;
+        y1 -= padding;
+        z1 -= padding;
+
+        x2 += padding;
+        y2 += padding;
+        z2 += padding;
+
+        // Create the 8 corner points of the expanded bounding box
         int[] xa = new int[]{
                 x1, x2, x1, x2,
                 x1, x2, x1, x2
@@ -130,11 +142,13 @@ public class RLUtils {
                 z2, z2, z2, z2
         };
 
+        // Convert these 3D coordinates to 2D canvas coordinates
         int[] x2d = new int[8];
         int[] y2d = new int[8];
 
         modelToCanvasCpu(client, 8, x, y, z, 0, xa, ya, za, x2d, y2d);
 
+        // Return the convex hull (the 2D projection of the expanded AABB)
         return Jarvis.convexHull(x2d, y2d);
     }
 }

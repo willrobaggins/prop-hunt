@@ -139,6 +139,17 @@ public interface PropHuntConfig extends Config {
 		return 10;
 	}
 
+	@ConfigItem(
+			keyName = "sound",
+			name = "Sound",
+			description = "Play a sound when you find a hider.",
+			position = 8,
+			section = seekerSettings
+	)
+	default boolean sound() {
+		return false;
+	}
+
 	/**
 	 * NOT IN USE
 	 **/

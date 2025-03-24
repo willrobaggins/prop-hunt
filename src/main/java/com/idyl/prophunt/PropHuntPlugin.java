@@ -14,6 +14,7 @@ import net.runelite.api.coords.LocalPoint;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.api.geometry.SimplePolygon;
 import net.runelite.client.callback.ClientThread;
@@ -109,7 +110,6 @@ public class PropHuntPlugin extends Plugin {
 	private int rightClickCounter = 0;
 	private static final int RANDOM_MODEL_UPDATE_INTERVAL = 5000;
 	private long lastRandomModelUpdate = 0;
-	public Polygon model_shape;
 
 	@Override
 	protected void startUp() throws Exception {
@@ -320,7 +320,6 @@ public class PropHuntPlugin extends Plugin {
 				configManager.setConfiguration(CONFIG_KEY, "players", playerList);
 			}
 		}
-
 	}
 
 	public void addMenu() {
@@ -346,10 +345,8 @@ public class PropHuntPlugin extends Plugin {
 	}
 
 	private String checkProp(){
-		Point mouseCanvasPosition = client.getMouseCanvasPosition();
-		//int cameraPitch = client.getCameraPitch();
-		//double cameraYOffset = calculateY(cameraPitch);
-
+		LocalPoint mouseCanvasPosition = client.getLocalDestinationLocation();
+		LocalPoint wp = client.getSelectedSceneTile().getLocalLocation();
 		for (String player: getPlayerNames()) {
 			RuneLiteObject disguise = playerDisguises.get(player);
 			if (disguise == null) {
@@ -358,8 +355,11 @@ public class PropHuntPlugin extends Plugin {
 			LocalPoint lp = disguise.getLocation();
 			Model disguiseModel = client.loadModel(playersData.get(player).modelID);
 			if (disguiseModel != null) {
-				SimplePolygon aabb = RLUtils.calculateAABB(client, disguiseModel, disguise.getOrientation(), lp.getX(), lp.getY(), 0);
-				if (aabb.contains(mouseCanvasPosition.getX(), mouseCanvasPosition.getY()))
+				int minX = lp.getX() - 100;
+				int minY = lp.getY() - 100;
+				int maxX = lp.getX() + 100;
+				int maxY = lp.getY() + 100;
+				if (wp.getX() > minX && wp.getX() < maxX && wp.getY() > minY && wp.getY() < maxY)
 				{
 					return player;
 				}
@@ -368,11 +368,35 @@ public class PropHuntPlugin extends Plugin {
 		return null;
 	}
 
-	public static double calculateY(double x) {
-		double a = -0.001;
-		double b = 50;
+	// This method calculates the screen position based on the camera's pitch, yaw, zoom, and screen size.
+	public int[] worldToScreen(double x, double y, double z, double cameraX, double cameraY, double cameraZ, double yaw, double pitch) {
+		int screenWidth = client.getCanvasWidth();   // Dynamic screen width
+		int screenHeight = client.getCanvasHeight(); // Dynamic screen height
 
-        return (a * ((x - 280) * (x - 280))) + b;
+		// Calculate relative coordinates of the character from the camera's position
+		double dx = x - cameraX;
+		double dy = y - cameraY;
+		double dz = z - cameraZ;
+
+		// Apply yaw rotation (around vertical axis)
+		double rotatedDx = dx * Math.cos(yaw) + dz * Math.sin(yaw);
+		double rotatedDz = -dx * Math.sin(yaw) + dz * Math.cos(yaw);
+
+		// Apply pitch rotation (around horizontal axis)
+		double rotatedDy = dy * Math.cos(pitch) - rotatedDz * Math.sin(pitch);
+		rotatedDz = dy * Math.sin(pitch) + rotatedDz * Math.cos(pitch);
+
+		// Perspective projection to 2D screen coordinates
+		if (rotatedDz == 0) {
+			rotatedDz = 1;  // Avoid division by zero
+		}
+
+		// OSRS uses a 2.5D isometric-like projection (horizontal + vertical)
+		double screenX = (rotatedDx / rotatedDz) * ((double) screenWidth / 2) + ((double) screenWidth / 2);
+		double screenY = (rotatedDy / rotatedDz) * ((double) screenHeight / 2) + ((double) screenHeight / 2);
+
+		// Return screen coordinates as an array
+		return new int[]{(int) screenX, (int) screenY};
 	}
 
 	private void playerFound(String playerName) {
@@ -388,8 +412,10 @@ public class PropHuntPlugin extends Plugin {
 			configManager.setConfiguration(CONFIG_KEY, "players", newPlayers);
 			rightClickCounter--;
 		}
-		client.playSoundEffect(2396);
-		client.playSoundEffect(2379);
+		if(config.sound()) {
+			client.playSoundEffect(2396);
+			client.playSoundEffect(2379);
+		}
 		sendHighlightedChatMessage(playerName + " has been found!");
 	}
 
