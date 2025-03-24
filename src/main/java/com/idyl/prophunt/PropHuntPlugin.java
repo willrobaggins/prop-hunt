@@ -143,6 +143,9 @@ public class PropHuntPlugin extends Plugin {
 	@Override
 	protected void shutDown() throws Exception {
 		clientThread.invokeLater(this::removeAllTransmogs);
+		configManager.setConfiguration(CONFIG_KEY, "hideMode", false);
+		PropHuntPlayerData playerData = new PropHuntPlayerData(client.getLocalPlayer().getName(), false, config.modelID(), config.orientation());
+		propHuntDataManager.updatePropHuntApi(playerData);
 		overlayManager.remove(propHuntOverlay);
 		hooks.unregisterRenderableDrawListener(drawListener);
 		clientToolbar.removeNavigation(navButton);
@@ -461,9 +464,12 @@ public class PropHuntPlugin extends Plugin {
 		}
 
 		RuneLiteObject disguise = client.createRuneLiteObject();
-
-		LocalPoint loc = LocalPoint.fromWorld(client, player.getWorldLocation());
-		if (loc == null) {
+		try {
+			LocalPoint loc = LocalPoint.fromWorld(client, player.getWorldLocation());
+			if (loc == null) {
+				return;
+			}
+		} catch (NullPointerException e){
 			return;
 		}
 
