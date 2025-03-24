@@ -32,37 +32,6 @@ public interface PropHuntConfig extends Config {
 	)
 	String advancedSettings = "advancedSettings";
 
-	/*
-	@ConfigSection(
-			name = "Transmog",
-			description = "Settings relating to transmog",
-			position = 1
-	)
-	String transmogSettings = "transmogSettings";
-	*/
-
-	@ConfigItem(
-			keyName = "alternate",
-			name = "Use alternate API server",
-			description = "Toggle use of alternate api server. (ADVANCED)",
-			position = 1,
-			section = advancedSettings
-	)
-	default boolean alternate() {
-		return false;
-	}
-
-	@ConfigItem(
-			keyName = "apiURL",
-			name = "Alternate API URL",
-			description = "URL to alternate API server. (ADVANCED)",
-			position = 2,
-			section = advancedSettings
-	)
-	default String apiURL() {
-		return "";
-	}
-
 	@ConfigItem(
 			keyName = "lobby",
 			name = "Lobby ID (RSN of host)",
@@ -143,11 +112,33 @@ public interface PropHuntConfig extends Config {
 			keyName = "sound",
 			name = "Sound",
 			description = "Play a sound when you find a hider.",
-			position = 8,
-			section = seekerSettings
+			position = 0,
+			section = advancedSettings
 	)
 	default boolean sound() {
 		return false;
+	}
+
+	@ConfigItem(
+			keyName = "alternate",
+			name = "Use alternate API server",
+			description = "Toggle use of alternate api server. (ADVANCED)",
+			position = 1,
+			section = advancedSettings
+	)
+	default boolean alternate() {
+		return false;
+	}
+
+	@ConfigItem(
+			keyName = "apiURL",
+			name = "Alternate API URL",
+			description = "URL to alternate API server. (ADVANCED)",
+			position = 2,
+			section = advancedSettings
+	)
+	default String apiURL() {
+		return "";
 	}
 
 	/**

@@ -260,7 +260,7 @@ public class PropHuntPlugin extends Plugin {
 		}
 		transmogOtherPlayers();
 		client.getPlayers().forEach(this::updatePlayerDisguiseLocation);
-		if(client.isMenuOpen() || client.getGameState() != GameState.LOGGED_IN) return;
+		if(client.isMenuOpen() || client.getGameState() != GameState.LOGGED_IN || rightClickCounter >= config.maxRightClicks()) return;
 		addMenu();
 	}
 
@@ -345,7 +345,6 @@ public class PropHuntPlugin extends Plugin {
 	}
 
 	private String checkProp(){
-		LocalPoint mouseCanvasPosition = client.getLocalDestinationLocation();
 		LocalPoint wp = client.getSelectedSceneTile().getLocalLocation();
 		for (String player: getPlayerNames()) {
 			RuneLiteObject disguise = playerDisguises.get(player);
@@ -366,37 +365,6 @@ public class PropHuntPlugin extends Plugin {
 			}
 		}
 		return null;
-	}
-
-	// This method calculates the screen position based on the camera's pitch, yaw, zoom, and screen size.
-	public int[] worldToScreen(double x, double y, double z, double cameraX, double cameraY, double cameraZ, double yaw, double pitch) {
-		int screenWidth = client.getCanvasWidth();   // Dynamic screen width
-		int screenHeight = client.getCanvasHeight(); // Dynamic screen height
-
-		// Calculate relative coordinates of the character from the camera's position
-		double dx = x - cameraX;
-		double dy = y - cameraY;
-		double dz = z - cameraZ;
-
-		// Apply yaw rotation (around vertical axis)
-		double rotatedDx = dx * Math.cos(yaw) + dz * Math.sin(yaw);
-		double rotatedDz = -dx * Math.sin(yaw) + dz * Math.cos(yaw);
-
-		// Apply pitch rotation (around horizontal axis)
-		double rotatedDy = dy * Math.cos(pitch) - rotatedDz * Math.sin(pitch);
-		rotatedDz = dy * Math.sin(pitch) + rotatedDz * Math.cos(pitch);
-
-		// Perspective projection to 2D screen coordinates
-		if (rotatedDz == 0) {
-			rotatedDz = 1;  // Avoid division by zero
-		}
-
-		// OSRS uses a 2.5D isometric-like projection (horizontal + vertical)
-		double screenX = (rotatedDx / rotatedDz) * ((double) screenWidth / 2) + ((double) screenWidth / 2);
-		double screenY = (rotatedDy / rotatedDz) * ((double) screenHeight / 2) + ((double) screenHeight / 2);
-
-		// Return screen coordinates as an array
-		return new int[]{(int) screenX, (int) screenY};
 	}
 
 	private void playerFound(String playerName) {
