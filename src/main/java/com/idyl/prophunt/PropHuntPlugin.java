@@ -327,8 +327,13 @@ public class PropHuntPlugin extends Plugin {
 		MenuEntry[] menuEntries = client.getMenuEntries();
 		if (menuEntries.length < 2) return;
 		for (MenuEntry menuEntry : menuEntries) {
-			if (Objects.equals(menuEntry.getType().toString(), "CC_OP") || Objects.equals(menuEntry.getType().toString(), "RUNELITE_PLAYER")) {
-				return;
+			if 	   (Objects.equals(menuEntry.getType().toString(), "CC_OP") ||
+					Objects.equals(menuEntry.getType().toString(), "RUNELITE_PLAYER") ||
+					Objects.equals(menuEntry.getType().toString(), "EXAMINE_NPC") ||
+					Objects.equals(menuEntry.getType().toString(), "RUNELITE") ||
+					Objects.equals(menuEntry.getType().toString(), "EXAMINE_OBJECT") ||
+					Objects.equals(menuEntry.getType().toString(), "WIDGET_TARGET")){
+					return;
 			}
 		}
 		client.createMenuEntry(1)
