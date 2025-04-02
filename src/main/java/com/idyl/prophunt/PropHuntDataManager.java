@@ -157,7 +157,7 @@ public class PropHuntDataManager {
         try {
             Request r = new Request.Builder()
                     .url(url)
-                    .post(RequestBody.create(MediaType.parse("application/json"), gson.toJson(playerList)))
+                    .post(RequestBody.create(JSON, gson.toJson(playerList)))
                     .build();
 
             okHttpClient.newCall(r).enqueue(new Callback() {
