@@ -226,6 +226,89 @@ public class PropHuntDataManager {
 
     }
 
+    public void postSeekers(String user, String data) {
+        String username = urlifyString(user);
+        String url = app2Url.concat("/lobby_seekers/" + username);
+
+        List<String> playerList;
+        if (data != null && !data.trim().isEmpty()) {
+            playerList = Arrays.asList(data.trim().split(","));
+        } else {
+            playerList = new ArrayList<>();
+        }
+
+        try {
+            Request r = new Request.Builder()
+                    .url(url)
+                    .post(RequestBody.create(JSON, gson.toJson(playerList)))
+                    .build();
+
+            okHttpClient.newCall(r).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    log.debug("Error sending post data", e);
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) {
+                    if (response.isSuccessful()) {
+                        log.debug("Successfully sent prop hunt data");
+                        response.close();
+                    } else {
+                        log.debug("Post request unsuccessful");
+                        response.close();
+                    }
+                }
+            });
+        } catch (IllegalArgumentException e) {
+            log.error("Bad URL given: " + e.getLocalizedMessage());
+        }
+    }
+
+    public void fetchSeekers(String lobby_id){
+        if (lobby_id == null || lobby_id.isEmpty()) {
+            plugin.updatePlayerList(null);
+            lobby_id = "";
+        }
+        try {
+            Request r = new Request.Builder()
+                    .url(app2Url.concat("/lobby_seekers/".concat(urlifyString(lobby_id))))
+                    .get()
+                    .build();
+
+            okHttpClient.newCall(r).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    log.info("Error getting lobby by lobby ID.", e);
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        try {
+                            JsonArray j = gson.fromJson(response.body().string(), JsonArray.class);
+                            String[] playerList = new String[j.size()];
+                            for (int i = 0; i < j.size(); i++){
+                                JsonElement element = j.get(i);
+                                if (element != null) {
+                                    playerList[i] = element.getAsString();
+                                }
+                            }
+                            plugin.updateSeekerList(playerList);
+                        } catch (IOException | NullPointerException | JsonSyntaxException e) {
+                            log.error(e.getMessage());
+                        }
+                    }
+
+                    response.close();
+                }
+            });
+        } catch (IllegalArgumentException e) {
+            log.error("Bad URL given: " + e.getLocalizedMessage());
+        }
+
+    }
+
     private String urlifyString(String str) {
         return str.trim().replaceAll("\\s", "%20");
     }

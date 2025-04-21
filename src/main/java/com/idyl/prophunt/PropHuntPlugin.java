@@ -111,6 +111,8 @@ public class PropHuntPlugin extends Plugin {
 	private static final int RANDOM_MODEL_UPDATE_INTERVAL = 5000;
 	private long lastRandomModelUpdate = 0;
 
+	private String[] seekerList;
+
 	@Override
 	protected void startUp() throws Exception {
 		playersData = new HashMap<>();
@@ -180,9 +182,11 @@ public class PropHuntPlugin extends Plugin {
 			String lobby = config.lobby();
 			if (lobby != null && !lobby.isEmpty()) {
 				propHuntDataManager.fetchPlayers(lobby);
+				propHuntDataManager.fetchSeekers(lobby);
 			}
 			else {
 				propHuntDataManager.fetchPlayers(null);
+				propHuntDataManager.fetchSeekers(null);
 			}
 			getPlayerConfigs();
 		}
@@ -192,6 +196,8 @@ public class PropHuntPlugin extends Plugin {
 			setPlayersFromString(config.players());
 			if (config.lobby() == null || config.lobby().isEmpty() || Objects.equals(config.lobby(), client.getLocalPlayer().getName())) {
 				propHuntDataManager.createLobby(client.getLocalPlayer().getName(), config.players());
+			} else if(isSeeker()) {
+				propHuntDataManager.createLobby(config.lobby(), config.players());
 			}
 			getPlayerConfigs();
 		}
@@ -206,6 +212,10 @@ public class PropHuntPlugin extends Plugin {
 
 		if (event.getKey().equals("models")) {
 			updateDropdown();
+		}
+
+		if (event.getKey().equals("seekers")) {
+			propHuntDataManager.postSeekers(client.getLocalPlayer().getName(), config.seekers());
 		}
 
 		if (event.getKey().equals("apiURL")) {
@@ -258,6 +268,7 @@ public class PropHuntPlugin extends Plugin {
 		} else {
 			if (++tickCounter >= TICK_INTERVAL) {
 				propHuntDataManager.fetchPlayers(config.lobby());
+				propHuntDataManager.fetchSeekers(config.lobby());
 				tickCounter = 0;
 			}
 		}
@@ -578,6 +589,10 @@ public class PropHuntPlugin extends Plugin {
 		configManager.setConfiguration(CONFIG_KEY, "players", p);
 	}
 
+	public void updateSeekerList(String[] playerList) {
+		seekerList = playerList;
+	}
+
 	private void updateDropdown() {
 		String[] modelList = config.models().split(",");
 		PropHuntModelId.map.clear();
@@ -601,6 +616,35 @@ public class PropHuntPlugin extends Plugin {
 		if(playerData == null) return false;
 
 		return playerData.hiding;
+	}
+
+	public boolean isSeeker(){
+		if(getSeekers(config.lobby()) == null) {
+			if (config.lobby().equals(client.getLocalPlayer().getName())) {
+				return true;
+			}
+			else return false;
+		}
+		for (String element : seekerList) {
+			if (element != null && element.contains(client.getLocalPlayer().getName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void printSeekers() {
+		if (seekerList == null) return;
+		for (String element : seekerList) {
+			if (element != null && element.contains(client.getLocalPlayer().getName())) {
+				System.out.println(element);
+			}
+		}
+	}
+
+	public String[] getSeekers(String lobbyID){
+		propHuntDataManager.fetchSeekers(lobbyID);
+		return seekerList;
 	}
 
 	private void hideMinimapDots() {
@@ -671,7 +715,7 @@ public class PropHuntPlugin extends Plugin {
 	}
 
 	private void setPlayersFromString(String playersString) {
-		String[] p = playersString.split("\n");
+		String[] p = playersString.split("[,\\n]");
 
 		for(int i=0;i<p.length;i++) {
 			p[i] = p[i].trim();

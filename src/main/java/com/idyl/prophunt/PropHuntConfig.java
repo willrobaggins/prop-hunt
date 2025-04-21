@@ -24,11 +24,20 @@ public interface PropHuntConfig extends Config {
 	)
 	String seekerSettings = "seekerSettings";
 
+
+	@ConfigSection(
+			name = "Additional Seekers",
+			description = "Add More Seekers.",
+			closedByDefault = true,
+			position = 2
+	)
+	String additionalSettings = "additionalSettings";
+
 	@ConfigSection(
 			name = "Advanced",
 			description = "Advanced settings.",
 			closedByDefault = true,
-			position = 2
+			position = 3
 	)
 	String advancedSettings = "advancedSettings";
 
@@ -138,6 +147,17 @@ public interface PropHuntConfig extends Config {
 			section = advancedSettings
 	)
 	default String apiURL() {
+		return "";
+	}
+
+	@ConfigItem(
+			keyName = "seekers",
+			name = "Player Names",
+			description = "Names of the players you are seeking with (comma separated & CaseSensitive)",
+			position = 1,
+			section = additionalSettings
+	)
+	default String seekers() {
 		return "";
 	}
 

@@ -37,7 +37,13 @@ Seekers are encouraged to turn on each setting in this menu.
 
 *Maximum Right Clicks:* The number of guesses a seeker can make.
 
-*NOTE: If you right click on an object, you will see an option "Guess". THIS IS AN EXPERIMENTAL MECHANIC and currently is not 100% accurate (typically when camera pitch is more parallel to the ground - works best with about a 60 degree angle pitch). This mechanic currently removes the hider from your player list / lobby, and will send a chat message that the player has been found.*
+*NOTE: If you right click on an object, you will see an option "Guess". If you correctly guess on the TILE A PROP IS LOCATED that player will be removed from the player list to remove them from Active Hiders.*
+
+**ADDITIONAL SEEKERS**
+You may add other players to your lobby as seekers, this will grant that user the rights to edit the player list.
+
+**ADVANCED**
+You may utilize an alternative API server using this menu.
 
 ## Hider Menu (Side Panel)
 
