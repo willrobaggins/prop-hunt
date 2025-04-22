@@ -632,16 +632,7 @@ public class PropHuntPlugin extends Plugin {
 		}
 		return false;
 	}
-
-	public void printSeekers() {
-		if (seekerList == null) return;
-		for (String element : seekerList) {
-			if (element != null && element.contains(client.getLocalPlayer().getName())) {
-				System.out.println(element);
-			}
-		}
-	}
-
+	
 	public String[] getSeekers(String lobbyID){
 		propHuntDataManager.fetchSeekers(lobbyID);
 		return seekerList;
