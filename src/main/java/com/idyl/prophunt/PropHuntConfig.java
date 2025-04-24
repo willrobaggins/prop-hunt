@@ -65,6 +65,16 @@ public interface PropHuntConfig extends Config {
 	}
 
 	@ConfigItem(
+			name = "players_hidden",
+			description = "Used for storing players read from API.",
+			keyName = "players_hidden",
+			hidden = true
+	)
+	default String playersHidden() {
+		return "";
+	}
+
+	@ConfigItem(
 			keyName = "playerList",
 			name = "On-Screen Player List",
 			description = "Display player list in overlay.",

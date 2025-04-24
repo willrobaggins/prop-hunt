@@ -112,6 +112,7 @@ public class PropHuntPlugin extends Plugin {
 	private long lastRandomModelUpdate = 0;
 
 	private String[] seekerList;
+	private boolean suppressLobbyPost = false;
 
 	@Override
 	protected void startUp() throws Exception {
@@ -194,10 +195,12 @@ public class PropHuntPlugin extends Plugin {
 		if (event.getKey().equals("players")) {
 			clientThread.invokeLater(this::removeAllTransmogs);
 			setPlayersFromString(config.players());
-			if (config.lobby() == null || config.lobby().isEmpty() || Objects.equals(config.lobby(), client.getLocalPlayer().getName())) {
-				propHuntDataManager.createLobby(client.getLocalPlayer().getName(), config.players());
-			} else if(isSeeker()) {
-				propHuntDataManager.createLobby(config.lobby(), config.players());
+			if(!suppressLobbyPost) {
+				if (config.lobby() == null || config.lobby().isEmpty() || Objects.equals(config.lobby(), client.getLocalPlayer().getName())) {
+					propHuntDataManager.createLobby(client.getLocalPlayer().getName(), config.players());
+				} else if (isSeeker()) {
+					propHuntDataManager.createLobby(config.lobby(), config.players());
+				}
 			}
 			getPlayerConfigs();
 		}
@@ -265,6 +268,10 @@ public class PropHuntPlugin extends Plugin {
 		}
 		if (config.lobby() == "" || config.lobby().isEmpty() || Objects.equals(config.lobby(), client.getLocalPlayer().getName())) {
 			configManager.setConfiguration(CONFIG_KEY, "lobby", client.getLocalPlayer().getName());
+			if (++tickCounter >= TICK_INTERVAL) {
+				propHuntDataManager.fetchPlayers(config.lobby());
+				tickCounter = 0;
+			}
 		} else {
 			if (++tickCounter >= TICK_INTERVAL) {
 				propHuntDataManager.fetchPlayers(config.lobby());
@@ -581,12 +588,14 @@ public class PropHuntPlugin extends Plugin {
 	}
 
 	public void updatePlayerList(String[] playerList) {
+		suppressLobbyPost = true;
 		String p = "";
 		if (playerList == null) p = "";
 		else p = String.join("\n", playerList);
 
 		setPlayersFromString(p);
 		configManager.setConfiguration(CONFIG_KEY, "players", p);
+		suppressLobbyPost = false;
 	}
 
 	public void updateSeekerList(String[] playerList) {
@@ -631,15 +640,6 @@ public class PropHuntPlugin extends Plugin {
 			}
 		}
 		return false;
-	}
-
-	public void printSeekers() {
-		if (seekerList == null) return;
-		for (String element : seekerList) {
-			if (element != null && element.contains(client.getLocalPlayer().getName())) {
-				System.out.println(element);
-			}
-		}
 	}
 
 	public String[] getSeekers(String lobbyID){

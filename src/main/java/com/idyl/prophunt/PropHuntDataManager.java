@@ -151,7 +151,7 @@ public class PropHuntDataManager {
         if (data != null && !data.trim().isEmpty()) {
             playerList = Arrays.asList(data.trim().split(","));
         } else {
-            playerList = new ArrayList<>();
+            playerList = Arrays.asList(data);
         }
 
         try {
