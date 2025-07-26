@@ -34,7 +34,7 @@ public interface PropHuntConfig extends Config {
 	String additionalSettings = "additionalSettings";
 
 	@ConfigSection(
-			name = "Advanced",
+			name = "Advanced Settings",
 			description = "Advanced settings.",
 			closedByDefault = true,
 			position = 3

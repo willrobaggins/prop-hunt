@@ -223,17 +223,37 @@ public class PropHuntPlugin extends Plugin {
 
 		if (event.getKey().equals("apiURL")) {
 			if (config.alternate()) {
-				propHuntDataManager.setBaseUrl(config.apiURL());
+				if (!config.apiURL().isEmpty()) {
+					propHuntDataManager.setApp1Url((config.apiURL() + ":8080"));
+					propHuntDataManager.setApp2Url((config.apiURL() + ":5000"));
+				} else {
+					propHuntDataManager.setApp1Url((propHuntDataManager.DEFAULT_URL + ":8080"));
+					propHuntDataManager.setApp2Url((propHuntDataManager.DEFAULT_URL + ":5000"));
+				}
+				System.out.println(propHuntDataManager.getDEFAULT_URL());
+				System.out.println(propHuntDataManager.getApp1Url());
+				System.out.println(propHuntDataManager.getApp2Url());
 			}
 		}
 
 		if (event.getKey().equals("alternate")) {
 			if (config.alternate()) {
-				propHuntDataManager.setBaseUrl(config.apiURL());
+				if (!config.apiURL().isEmpty()) {
+					propHuntDataManager.setApp1Url((config.apiURL() + ":8080"));
+					propHuntDataManager.setApp2Url((config.apiURL() + ":5000"));
+				} else {
+					propHuntDataManager.setApp1Url((propHuntDataManager.DEFAULT_URL + ":8080"));
+					propHuntDataManager.setApp2Url((propHuntDataManager.DEFAULT_URL + ":5000"));
+					configManager.setConfiguration("prophunt", "apiURL", "");
+				}
 			} else {
-				propHuntDataManager.setBaseUrl(propHuntDataManager.DEFAULT_URL + ":5000");
+				propHuntDataManager.setApp1Url((propHuntDataManager.DEFAULT_URL + ":8080"));
+				propHuntDataManager.setApp2Url((propHuntDataManager.DEFAULT_URL + ":5000"));
 				configManager.setConfiguration("prophunt", "apiURL", "");
 			}
+			System.out.println(propHuntDataManager.getDEFAULT_URL());
+			System.out.println(propHuntDataManager.getApp1Url());
+			System.out.println(propHuntDataManager.getApp2Url());
 		}
 
 		if (event.getKey().equals("limitRightClicks")) {

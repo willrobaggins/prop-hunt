@@ -17,7 +17,11 @@ import java.util.*;
 public class PropHuntDataManager {
     @Getter
     public String DEFAULT_URL = "http://3.133.56.193";
+
+    @Getter
     private String app1Url = DEFAULT_URL + ":8080";
+
+    @Getter
     private String app2Url = DEFAULT_URL + ":5000";
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
@@ -30,9 +34,14 @@ public class PropHuntDataManager {
     @Inject
     private Gson gson;
 
-    public void setBaseUrl(String baseUrl) {
-        this.DEFAULT_URL = baseUrl;
-        log.debug("Setting base url: " + DEFAULT_URL);
+    public void setApp1Url(String url){
+        this.app1Url = url;
+        log.debug("Setting app1 url: " + app1Url);
+    }
+
+    public void setApp2Url(String url){
+        this.app2Url = url;
+        log.debug("Setting app2 url: " + app2Url);
     }
 
     protected void updatePropHuntApi(PropHuntPlayerData data)
