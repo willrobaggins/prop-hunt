@@ -10,7 +10,7 @@ repositories {
 	mavenCentral()
 }
 
-def runeLiteVersion = '1.11.12'
+def runeLiteVersion = '1.13.7'
 
 dependencies {
 	compileOnly group: 'net.runelite', name:'client', version: runeLiteVersion
@@ -24,7 +24,7 @@ dependencies {
 }
 
 group = 'com.idyl.prophunt'
-version = '1.25.2'
+version = '1.25.3'
 sourceCompatibility = "11"
 
 tasks.withType(JavaCompile) {

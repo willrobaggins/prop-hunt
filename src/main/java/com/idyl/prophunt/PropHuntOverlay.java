@@ -3,6 +3,7 @@ package com.idyl.prophunt;
 import net.runelite.api.Client;
 import net.runelite.api.Perspective;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.*;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -34,6 +35,9 @@ public class PropHuntOverlay extends OverlayPanel {
 
     @Override
     public Dimension render(Graphics2D graphics) {
+        if (plugin.getClient().getVarbitValue(VarbitID.CUTSCENE_STATUS) != 0) {
+            return null;
+        }
         String[] playerNames = plugin.getPlayerNames();
 
         if (playerNames != null && playerNames.length > 0) {

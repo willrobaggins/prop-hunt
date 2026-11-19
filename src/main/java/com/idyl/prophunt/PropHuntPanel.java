@@ -4,12 +4,12 @@ import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.text.AbstractDocument;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 
 public class PropHuntPanel extends PluginPanel implements ActionListener {
     private PropHuntPlugin plugin;
@@ -96,29 +96,12 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
         modelIdTextField = new JTextField(10);
         modelIdTextField.setText(String.valueOf(plugin.getModelId()));
         ((AbstractDocument) modelIdTextField.getDocument()).setDocumentFilter(new NumericDocumentFilter());
-        modelIdTextField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                updateModelId();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                updateModelId();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                updateModelId();
-            }
-
-            private void updateModelId() {
-                try {
-                    int modelId = Integer.parseInt(modelIdTextField.getText());
-                    plugin.setModelID(new PropHuntModelId("", modelId));
-                } catch (NumberFormatException ex) {
-                    modelIdTextField.setText("");
-                }
+        onCommit(modelIdTextField, () -> {
+            Integer modelId = parseOrNull(modelIdTextField.getText());
+            if (modelId == null) {
+                modelIdTextField.setText(String.valueOf(plugin.getModelId()));
+            } else if (modelId != plugin.getModelId()) {
+                plugin.setModelID(new PropHuntModelId("", modelId));
             }
         });
         gbc.gridx = 1;
@@ -144,29 +127,12 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
         gbc.insets = new Insets(5, 0, 5, 0);
         JTextField minField = new JTextField(Integer.toString(plugin.getMin()), 4);
         ((AbstractDocument) minField.getDocument()).setDocumentFilter(new NumericDocumentFilter());
-        minField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                updateMinField();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                updateMinField();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                updateMinField();
-            }
-
-            private void updateMinField() {
-                try {
-                    int minValue = Integer.parseInt(minField.getText());
-                    plugin.setMinModelID(minValue);
-                } catch (NumberFormatException ex) {
-                    minField.setText("0");
-                }
+        onCommit(minField, () -> {
+            Integer minValue = parseOrNull(minField.getText());
+            if (minValue == null) {
+                minField.setText(Integer.toString(plugin.getMin()));
+            } else if (minValue != plugin.getMin()) {
+                plugin.setMinModelID(minValue);
             }
         });
         randomPanel.add(minField, gbc);
@@ -181,29 +147,12 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
         gbc.gridy = 1;
         JTextField maxField = new JTextField(Integer.toString(plugin.getMax()), 4);
         ((AbstractDocument) maxField.getDocument()).setDocumentFilter(new NumericDocumentFilter());
-        maxField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                updateMaxField();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                updateMaxField();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                updateMaxField();
-            }
-
-            private void updateMaxField() {
-                try {
-                    int maxValue = Integer.parseInt(maxField.getText());
-                    plugin.setMaxModelID(maxValue);
-                } catch (NumberFormatException ex) {
-                    maxField.setText("0");
-                }
+        onCommit(maxField, () -> {
+            Integer maxValue = parseOrNull(maxField.getText());
+            if (maxValue == null) {
+                maxField.setText(Integer.toString(plugin.getMax()));
+            } else if (maxValue != plugin.getMax()) {
+                plugin.setMaxModelID(maxValue);
             }
         });
         randomPanel.add(maxField, gbc);
@@ -317,6 +266,30 @@ public class PropHuntPanel extends PluginPanel implements ActionListener {
         } else {
             button.setText("Hide Mode: OFF");
             button.setForeground(Color.RED);
+        }
+    }
+
+    // Update the model ID box
+    public void setModelIdText(int modelId) {
+        SwingUtilities.invokeLater(() -> modelIdTextField.setText(String.valueOf(modelId)));
+    }
+
+    // Save on Enter or click away
+    private static void onCommit(JTextField field, Runnable action) {
+        field.addActionListener(e -> action.run());
+        field.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                action.run();
+            }
+        });
+    }
+
+    private static Integer parseOrNull(String text) {
+        try {
+            return Integer.parseInt(text.trim());
+        } catch (NumberFormatException ex) {
+            return null;
         }
     }
 
