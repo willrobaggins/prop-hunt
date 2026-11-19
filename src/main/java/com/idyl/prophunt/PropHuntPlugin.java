@@ -17,6 +17,7 @@ import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.api.geometry.SimplePolygon;
+import net.runelite.api.model.Jarvis;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.callback.Hooks;
 import net.runelite.client.chat.ChatColorType;
@@ -117,6 +118,7 @@ public class PropHuntPlugin extends Plugin {
 
 	private String[] seekerList;
 	private boolean suppressLobbyPost = false;
+	private Point lastWorldMousePoint;
 
 	@Override
 	protected void startUp() throws Exception {
@@ -309,6 +311,7 @@ public class PropHuntPlugin extends Plugin {
 		}
 		transmogOtherPlayers();
 		client.getPlayers().forEach(this::updatePlayerDisguiseLocation);
+		if (!client.isMenuOpen()) lastWorldMousePoint = client.getMouseCanvasPosition();
 		if(client.isMenuOpen() || client.getGameState() != GameState.LOGGED_IN || rightClickCounter >= config.maxRightClicks()) return;
 		addMenu();
 	}
@@ -396,26 +399,56 @@ public class PropHuntPlugin extends Plugin {
 	}
 
 	private String checkProp(){
-		LocalPoint wp = client.getSelectedSceneTile().getLocalLocation();
+		Tile selectedTile = client.getSelectedSceneTile();
+		LocalPoint wp = selectedTile != null ? selectedTile.getLocalLocation() : null;
+		String hullHit = null;
+		long hullHitDist = Long.MAX_VALUE;
+		String tileHit = null;
 		for (String player: getPlayerNames()) {
 			RuneLiteObject disguise = playerDisguises.get(player);
-			if (disguise == null) {
+			if (disguise == null || !disguise.isActive()) {
 				continue;
 			}
-			LocalPoint lp = disguise.getLocation();
-			Model disguiseModel = client.loadModel(playersData.get(player).modelID);
-			if (disguiseModel != null) {
-				int minX = lp.getX() - 100;
-				int minY = lp.getY() - 100;
-				int maxX = lp.getX() + 100;
-				int maxY = lp.getY() + 100;
-				if (wp.getX() > minX && wp.getX() < maxX && wp.getY() > minY && wp.getY() < maxY)
-				{
-					return player;
+
+			Shape hull = getDisguiseHull(disguise);
+			if (hull != null && lastWorldMousePoint != null
+					&& hull.contains(lastWorldMousePoint.getX(), lastWorldMousePoint.getY())) {
+				long dx = disguise.getX() - client.getCameraX();
+				long dy = disguise.getY() - client.getCameraY();
+				long dist = dx * dx + dy * dy;
+				if (dist < hullHitDist) {
+					hullHit = player;
+					hullHitDist = dist;
 				}
+				continue;
+			}
+
+			LocalPoint lp = disguise.getLocation();
+			if (tileHit == null && wp != null && lp != null
+					&& Math.abs(wp.getX() - lp.getX()) < 100 && Math.abs(wp.getY() - lp.getY()) < 100) {
+				tileHit = player;
 			}
 		}
-		return null;
+		return hullHit != null ? hullHit : tileHit;
+	}
+
+	private Shape getDisguiseHull(RuneLiteObject disguise) {
+		Model model = disguise.getModel();
+		if (model == null) return null;
+
+		WorldView wv = client.getWorldView(disguise.getWorldView());
+		if (wv == null) wv = client.getTopLevelWorldView();
+		if (wv == null) return null;
+
+		int count = model.getVerticesCount();
+		int[] x2d = new int[count];
+		int[] y2d = new int[count];
+		Perspective.modelToCanvas(client, wv, count,
+				disguise.getX(), disguise.getY(), disguise.getZ(),
+				disguise.getOrientation(),
+				model.getVerticesX(), model.getVerticesZ(), model.getVerticesY(),
+				x2d, y2d);
+		return Jarvis.convexHull(x2d, y2d);
 	}
 
 	private void playerFound(String playerName) {
